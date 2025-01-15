@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="Info">
+	<Appenders>
+		<Console name="console" target="SYSTEM_OUT">
+			<PatternLayout pattern="[%d{dd/MM/yy HH:mm:ss.SSS}] %-5level [%.15t] [%X{traceId}] [%c{1}] %msg%n"/>
+		</Console>
+		<!-- File Appender -->
+		<File name="file" fileName="target/logs/test-result.log" append="true">
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+		</File>
+	</Appenders>
+	<Loggers>
+		<Logger name="org.hibernate.engine.internal.StatisticalLoggingSessionEventListener" level="OFF" additivity="false"/>
+		<Root level="Info">
+			<AppenderRef ref="console"/>
+			<AppenderRef ref="file"/>
+		</Root>
+	</Loggers>
+</Configuration>
