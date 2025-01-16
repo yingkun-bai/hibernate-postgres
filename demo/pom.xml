@@ -23,7 +23,7 @@
 		<hibernate.version>6.6.4.Final</hibernate.version>
 		<postgresql.version>42.7.2</postgresql.version>
 		<junit.version>5.11.0</junit.version>
-		<reactor.version>3.6.9</reactor.version>
+		<reactor.version>3.7.2</reactor.version>
 		<uuid-creator.version>4.4.0</uuid-creator.version>
 		<chronicle-map.version>3.27ea0</chronicle-map.version>
 	</properties>
@@ -129,6 +129,14 @@
 			<artifactId>chronicle-map</artifactId>
 			<version>${chronicle-map.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.projectreactor/reactor-test -->
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<version>${reactor.version}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 </project>

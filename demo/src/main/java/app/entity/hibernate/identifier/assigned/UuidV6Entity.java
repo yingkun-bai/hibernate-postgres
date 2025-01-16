@@ -1,14 +1,15 @@
 package app.entity.hibernate.identifier.assigned;
 
-import java.util.UUID;
-
 import com.github.f4b6a3.uuid.UuidCreator;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * <a href="https://github.com/f4b6a3/uuid-creator">UUID-creator</a>
@@ -20,12 +21,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-public class UuidEntity {
+@Table(name = "UUID_V6_ENTITY")
+public class UuidV6Entity implements Serializable {
 	@Id
 	private UUID id;
 	private String text;
 
-	public UuidEntity(String text) {
+	public UuidV6Entity(String text) {
 		this.id = UuidCreator.getTimeOrdered();
 		this.text = text;
 	}

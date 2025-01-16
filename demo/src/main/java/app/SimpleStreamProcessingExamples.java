@@ -1,32 +1,31 @@
 package app;
 
-import java.util.stream.Stream;
-
+import app.entity.hibernate.identifier.assigned.UuidV6Entity;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 
-import app.entity.hibernate.identifier.assigned.UuidEntity;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.stream.Stream;
 @Slf4j
 @RequiredArgsConstructor
 public class SimpleStreamProcessingExamples {
 
 	private final SessionFactory sessionFactory;
 
-	private Stream<UuidEntity> generateSourceStream() {
+	private Stream<UuidV6Entity> generateSourceStream() {
 		StatelessSession session = sessionFactory.openStatelessSession();
-		return session.createQuery("FROM UuidEntity", UuidEntity.class).stream()
+		return session.createQuery("FROM UuidV6Entity", UuidV6Entity.class).stream()
 				.onClose(session::close); // Ensure session closes when the stream is closed
 	}
 
-	public void processStreamWithSlowIOIntermediary() {
-		try (Stream<UuidEntity> stream = generateSourceStream().parallel()) { // Use parallel stream for concurrent processing
+	public void processStreamWithSlowIntermediary() {
+		try (Stream<UuidV6Entity> stream = generateSourceStream().parallel()) { // Use parallel stream for concurrent processing
 			stream.forEach(this::processEntity);
 		}
 	}
 
-	private void processEntity(UuidEntity entity) {
+	private void processEntity(UuidV6Entity entity) {
 		try {
 			log.info("Processing entity: {}", entity.getId());
 			// Simulate a slow I/O operation with sleep (can be replaced with real I/O task)

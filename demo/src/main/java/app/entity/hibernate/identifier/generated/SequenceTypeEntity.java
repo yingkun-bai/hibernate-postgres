@@ -1,11 +1,7 @@
 package app.entity.hibernate.identifier.generated;
 
 import app.entity.hibernate.identifier.IdentifiableEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,6 +16,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
+@Table(name = "SEQUENCE_ENTITY")
 public class SequenceTypeEntity implements IdentifiableEntity {
 
 	@Id

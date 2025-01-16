@@ -1,21 +1,20 @@
 package app;
 
-import static app.util.MessageGenerator.generateMessagesList;
-import static app.util.MessageGenerator.generateRandomString;
-
-import java.util.List;
-import java.util.stream.IntStream;
-
+import app.entity.hibernate.identifier.IdentifiableEntity;
+import app.entity.hibernate.identifier.assigned.IntIdEntity;
+import app.entity.hibernate.identifier.assigned.UuidV6Entity;
+import jakarta.persistence.GenerationType;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 
-import app.entity.hibernate.identifier.IdentifiableEntity;
-import app.entity.hibernate.identifier.assigned.IntIdEntity;
-import app.entity.hibernate.identifier.assigned.UuidEntity;
-import jakarta.persistence.GenerationType;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.stream.IntStream;
+
+import static app.util.MessageGenerator.generateMessagesList;
+import static app.util.MessageGenerator.generateRandomString;
 
 /**
  * begin;
@@ -35,20 +34,20 @@ public class HibernateBatchingExample {
 	public final SessionFactory sessionFactory;
 
 	public void createEntitiesInBatchSize(int total, int batchSize) {
-		List<UuidEntity> uuidEntityList = IntStream.range(1, total + 1)
-				.mapToObj(integer -> new UuidEntity(generateRandomString())).toList();
+		List<UuidV6Entity> uuidV6EntityList = IntStream.range(1, total + 1)
+				.mapToObj(integer -> new UuidV6Entity(generateRandomString())).toList();
 		try (StatelessSession statelessSession = sessionFactory.openStatelessSession()) {
 			statelessSession.setJdbcBatchSize(batchSize);
 			Transaction transaction = statelessSession.beginTransaction();
-			uuidEntityList.forEach(statelessSession::insert);
+			uuidV6EntityList.forEach(statelessSession::insert);
 			transaction.commit();
 		}
 	}
 
 	public void createEntitiesWithBatchedTransaction(int total, int batchSize) {
 		// Prepare the insert list
-		List<UuidEntity> toInsertList = IntStream.range(0, total)
-				.mapToObj(integer -> new UuidEntity(generateRandomString())).toList();
+		List<UuidV6Entity> toInsertList = IntStream.range(0, total)
+				.mapToObj(integer -> new UuidV6Entity(generateRandomString())).toList();
 		// Calculate the number of transactions
 		int count = (total + batchSize) / batchSize;
 		log.info("We will have in total {} transactions", count);
@@ -80,15 +79,15 @@ public class HibernateBatchingExample {
 	}
 
 	public void createMixedEntities(int total, int batchSize) {
-		List<UuidEntity> uuidEntityList = IntStream.range(1, total + 1)
-				.mapToObj(integer -> new UuidEntity(generateRandomString())).toList();
+		List<UuidV6Entity> uuidV6EntityList = IntStream.range(1, total + 1)
+				.mapToObj(integer -> new UuidV6Entity(generateRandomString())).toList();
 		List<IntIdEntity> intIdEntityList = IntStream.range(1, total + 1)
 				.mapToObj(integer -> new IntIdEntity(integer, generateRandomString())).toList();
 		// Hibernate 6.3 new API :)
 		sessionFactory.inStatelessTransaction(statelessSession -> {
 			statelessSession.setJdbcBatchSize(batchSize);
 			for (int i = 0; i < total; i++) {
-				statelessSession.insert(uuidEntityList.get(i));
+				statelessSession.insert(uuidV6EntityList.get(i));
 				statelessSession.insert(intIdEntityList.get(i));
 			}
 

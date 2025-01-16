@@ -1,21 +1,22 @@
 package app.entity.hibernate.postgres;
 
-import java.util.UUID;
-
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLInetJdbcType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLInetJdbcType;
+
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
+@Table(name = "ACCESS_INFO")
 public class AccessInfo {
 	@Id
 	private UUID id;

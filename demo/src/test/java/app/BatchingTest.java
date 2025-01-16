@@ -1,5 +1,7 @@
 package app;
 
+import app.config.AppConfig;
+import jakarta.persistence.GenerationType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,8 +11,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import app.config.AppConfig;
-import jakarta.persistence.GenerationType;
 
 class BatchingTest {
 
@@ -51,11 +51,6 @@ class BatchingTest {
 		sut.createEntitiesInBatchSize(totalSize, batchSize);
 	}
 
-//	@Test
-//	@Disabled
-//	void will_cause_long_transaction() {
-//		sut.slowIntermediaryOption();
-//	}
 
 	@ParameterizedTest
 	@EnumSource(value = GenerationType.class, names = {"IDENTITY", "SEQUENCE", "AUTO", "UUID"})

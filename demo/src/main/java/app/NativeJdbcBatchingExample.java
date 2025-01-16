@@ -1,12 +1,8 @@
 package app;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import lombok.extern.slf4j.Slf4j;
+
+import java.sql.*;
 
 @Slf4j
 public class NativeJdbcBatchingExample implements Runnable {
@@ -50,6 +46,7 @@ public class NativeJdbcBatchingExample implements Runnable {
 		}
 	}
 
+	// Used for slides only
 	private static void executeInBatchesCodeExample(Connection connection) throws SQLException {
 		try (PreparedStatement ps = connection.prepareStatement(NativeJdbcBatchingExample.INSERT_SQL_QUERY)) {
 

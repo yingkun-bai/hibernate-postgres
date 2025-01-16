@@ -1,19 +1,19 @@
 package app;
 
-import java.util.List;
-import java.util.stream.Stream;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.StatelessSession;
-
-import app.entity.hibernate.identifier.assigned.UuidEntity;
+import app.entity.hibernate.identifier.assigned.UuidV6Entity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.set.ChronicleSet;
 import net.openhft.chronicle.set.ChronicleSetBuilder;
+import org.hibernate.SessionFactory;
+import org.hibernate.StatelessSession;
+import org.hibernate.Transaction;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,28 +24,81 @@ public class ReactiveStreamProcessingExamples {
 
 	private final SessionFactory sessionFactory;
 
-	private Stream<UuidEntity> generateSourceStream() {
+	public Stream<UuidV6Entity> generateSourceStream() {
 		StatelessSession session = sessionFactory.openStatelessSession();
-		return session.createQuery("FROM UuidEntity", UuidEntity.class)
-				.setFetchSize(100) // very important if you are streaming a large data set
-				.stream()
-				.onClose(session::close); // Ensure the session closes when the stream is closed
+		Transaction transaction = session.beginTransaction(); // Start a transaction
+
+		try {
+			return session.createQuery("FROM UuidV6Entity", UuidV6Entity.class)
+					.setFetchSize(100) // Important for streaming large datasets
+					.stream()
+					.onClose(() -> {
+						log.info("Closing StatelessSession and transaction!");
+
+						try {
+							transaction.commit(); // Commit the transaction when the stream is closed
+						} catch (Exception e) {
+							transaction.rollback(); // Rollback on failure
+							throw e;
+						} finally {
+							session.close(); // Ensure the session is closed
+						}
+					});
+		} catch (Exception e) {
+			transaction.rollback(); // Rollback if an exception occurs
+			session.close(); // Close the session
+			throw e;
+		}
 	}
-	private Stream<UuidEntity> generateSourceStreamFromChronicleSet() {
+
+	public Stream<UuidV6Entity> generateSourceStreamWithoutFetchSize() {
+		StatelessSession session = sessionFactory.openStatelessSession();
+		Transaction transaction = session.beginTransaction(); // Start a transaction
+
+		try {
+			return session.createQuery("FROM UuidV6Entity", UuidV6Entity.class)
+					.stream()
+					.onClose(() -> {
+						try {
+							transaction.commit(); // Commit the transaction when the stream is closed
+							log.info("Transaction committed and StatelessSession closed");
+						} catch (Exception e) {
+							transaction.rollback(); // Rollback the transaction in case of failure
+							log.error("Transaction rollback due to an error", e);
+							throw e;
+						} finally {
+							session.close(); // Ensure the session is closed
+						}
+					});
+		} catch (Exception e) {
+			transaction.rollback(); // Rollback the transaction if an error occurs before streaming starts
+			session.close(); // Close the session
+			throw e;
+		}
+	}
+
+	public Stream<UuidV6Entity> generateSourceStreamFromChronicleSet() {
+		long entriesNum = getEntriesCount();
 		// Create ChronicleSet (off-heap, persisted, or in-memory as needed)
-		ChronicleSet<UuidEntity> chronicleSet = ChronicleSetBuilder
-				.of(UuidEntity.class)
-				.averageKey(new UuidEntity()) // Adjust as needed
-				.entries(10_000) // Estimate number of entries
+		ChronicleSet<UuidV6Entity> chronicleSet = ChronicleSetBuilder
+				.of(UuidV6Entity.class)
+				.averageKey(new UuidV6Entity()) // Adjust as needed
+				.entries(entriesNum) // Estimate number of entries
 				.create();
 
 		// Stream data into ChronicleSet
-		try (Stream<UuidEntity> sourceStream = generateSourceStream()) {
+		try (Stream<UuidV6Entity> sourceStream = generateSourceStream()) {
 			sourceStream.forEach(chronicleSet::add);
 		}
 
 		// Return a stream from the ChronicleSet
 		return chronicleSet.stream().onClose(chronicleSet::close);
+	}
+
+	private long getEntriesCount() {
+		try (StatelessSession session = sessionFactory.openStatelessSession()) {
+			return session.createNativeQuery("select count(*) from UUID_V6_ENTITY ", long.class).getSingleResult();
+		}
 	}
 
 	public void processAsyncWithParallelism() {
@@ -59,16 +112,9 @@ public class ReactiveStreamProcessingExamples {
 				.doOnError(e -> log.error("Error during processing", e))
 				.subscribe();
 	}
-	public void processAsyncWithFlatMap() {
-		Flux.fromStream(this::generateSourceStream)          // Create a Flux from the source stream
-				.buffer(BATCH_SIZE)                              // Collect entities into batches of size BATCH_SIZE
-				.flatMap(this::processBatchAsync, PARALLELISM)// Process each batch asynchronously
-				.doOnComplete(() -> log.info("Processing complete"))
-				.doOnError(e -> log.error("Error during processing", e))
-				.subscribe();
-	}
 
-	private Mono<Void> processBatchAsync(List<UuidEntity> batch) {
+
+	public Mono<Void> processBatchAsync(List<UuidV6Entity> batch) {
 		return Mono.fromRunnable(() -> {
 			log.info("Processing batch of size {}", batch.size());
 			batch.forEach(entity -> {
