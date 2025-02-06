@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 @Slf4j
@@ -34,7 +35,9 @@ class FetchingPerformanceTest {
 
     @Test
     void long_running_processing_examples() {
-        StepVerifier.create(Flux.fromStream(sut.generateSourceStream())          // Create a Flux from the source stream
+        StepVerifier.create(Flux.fromStream(sut.generateSourceStream())
+                        .subscribeOn(Schedulers.boundedElastic())// Create a Flux from the source stream
+                        // Create a Flux from the source stream
                         .buffer(BATCH_SIZE)                              // Collect entities into batches of size BATCH_SIZE
                         .flatMap(batch -> sut.processBatchAsync(batch), PARALLELISM)// Process each batch asynchronously
                         .doOnComplete(() -> log.info("Processing complete"))
@@ -44,11 +47,13 @@ class FetchingPerformanceTest {
 
     @Test
     void streaming_from_chronicle_examples() {
-        StepVerifier.create(Flux.fromStream(sut.generateSourceStreamFromChronicleSet())          // Create a Flux from the source stream
+        StepVerifier.create(Flux.fromStream(sut.generateSourceStreamFromChronicleSet())
+                        .subscribeOn(Schedulers.boundedElastic())// Create a Flux from the source stream
                         .buffer(BATCH_SIZE)                              // Collect entities into batches of size BATCH_SIZE
                         .flatMap(batch -> sut.processBatchAsync(batch), PARALLELISM)// Process each batch asynchronously
                         .doOnComplete(() -> log.info("Processing complete"))
                         .doOnError(e -> log.error("Error during processing", e)))
+
                 .verifyComplete();
     }
 
